@@ -5,7 +5,7 @@ FROM ghcr.io/actions/actions-runner:2.338.0@sha256:4ffadc0002b2581327e06101fc8c0
 USER root
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates curl jq git \
+    && apt-get install -y --no-install-recommends ca-certificates curl jq git gh just \
     && rm -rf /var/lib/apt/lists/*
 
 # ---------------------------------------------------------------------------
