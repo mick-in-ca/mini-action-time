@@ -18,18 +18,23 @@ Minimal, ephemeral self-hosted GitHub Actions runner image for any Docker host.
 
 **Rotating:** generate a new token, update `GH_PAT` on each runner container, recreate the containers, then revoke the old token.
 
-## 2. Build the image
+## 2. Get the image
 
-On the Docker host:
+The `image` workflow builds every PR and, after merge to `main`, pushes to GHCR:
+
+| Tag | Meaning |
+|---|---|
+| `ghcr.io/mick-in-ca/mini-action-time:latest` | newest build from `main` |
+| `ghcr.io/mick-in-ca/mini-action-time:<runner-version>` | e.g. `2.338.0`, for pinning or rollback |
+| `ghcr.io/mick-in-ca/mini-action-time:sha-<commit>` | exact commit |
 
 ```bash
-# Private repo: authenticate with a separate read-only credential (deploy key or Contents: read PAT), not the runner PAT
-git clone https://github.com/<owner>/mini-action-time.git
-cd mini-action-time
-docker build -t mini-action-time:local .
+docker pull ghcr.io/mick-in-ca/mini-action-time:latest
 ```
 
-To update later: review and merge the Dependabot PR, then `git pull && docker build -t mini-action-time:local .` and **recreate** each runner container. A restart, including the `always` restart after each job, reuses the container's original image, so without recreating the runners keep running the old image. Clean up afterwards with `docker image prune`.
+Or build it yourself: `git clone` this repo, then `docker build -t mini-action-time:local .`
+
+To update: review and merge the Dependabot PR, wait for the `image` workflow, `docker pull` again and **recreate** each runner container. A restart, including the `always` restart after each job, reuses the container's original image, so without recreating the runners keep running the old image. Clean up afterwards with `docker image prune`.
 
 ## 3. Run a runner
 
@@ -42,7 +47,7 @@ docker run -d --name runner-1 \
   -e GH_REPO=<repo> \
   -e GH_PAT=<fine-grained-pat> \
   -e RUNNER_NAME=runner-1 \
-  mini-action-time:local
+  ghcr.io/mick-in-ca/mini-action-time:latest
 ```
 
 | Variable | Required | Default |
