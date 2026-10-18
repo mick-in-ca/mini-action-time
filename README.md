@@ -3,7 +3,7 @@
 Minimal, ephemeral self-hosted GitHub Actions runner image for any Docker host.
 
 - Only third-party code: GitHub's official `ghcr.io/actions/actions-runner`, pinned by digest.
-- One job per container: register, run one job, exit. Restart policy `always` brings up a fresh one.
+- One job per container: register, run one job, exit. Restart policy `always` brings up a fresh one. A restart keeps the container's filesystem, so `entrypoint.sh` first deletes the previous registration (`.runner`, `.credentials`, `.credentials_rsaparams`, `.setup_info`) and the previous job's `_work` and `_diag` directories.
 - Registers to **one** private repo using a fine-grained PAT.
 - The PAT never reaches workflow jobs: `entrypoint.sh` trades it for a short-lived registration token, `unset`s it, then `exec`s the runner with a clean environment. The runner's `env.sh` only writes a fixed allowlist (`LANG`, `JAVA_HOME`, …) to `.env`, so the PAT cannot land there either.
 - `sudo` is removed, so jobs cannot install or change anything at runtime.
@@ -107,3 +107,7 @@ With a macvlan network, the Docker host and its containers can't talk to each ot
 - Only run workflows from trusted code. Don't trigger this runner from `pull_request_target` or from forks.
 - The runner's own credentials (`.runner`, `.credentials`) are readable by the job, as on any self-hosted runner. `--ephemeral` makes them single-use, and the container is discarded after each job.
 - `GH_PAT` stays visible in `docker inspect` and in the container config on the host. Treat host access as PAT access.
+
+## 8. Troubleshooting
+
+**`Cannot configure the runner because it is already configured`**: the container is running an image from before the restart cleanup existed. Restarts reuse the container's original image, so pull the new image and **recreate** the container (see section 2).
