@@ -10,6 +10,11 @@ set -euo pipefail
 RUNNER_NAME="${RUNNER_NAME:-runner-$(hostname)}"
 RUNNER_LABELS="${RUNNER_LABELS:-ephemeral}"
 
+cd /home/runner
+# Docker restarts keep the writable layer: stale registration makes config.sh refuse to run, and _work/_diag carry over the previous job.
+# No `config.sh remove`: GitHub already deregistered the ephemeral runner, and remove would need another token.
+rm -rf .runner .credentials .credentials_rsaparams .setup_info _work _diag
+
 # Header goes via stdin so the PAT never appears in curl's argv (/proc/*/cmdline).
 reg_token="$(
   printf 'Authorization: Bearer %s\n' "$GH_PAT" |
